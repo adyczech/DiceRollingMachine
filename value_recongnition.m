@@ -1,3 +1,5 @@
+%Matlab code for image processing and analysis.
+
 clc
 clear all
 
@@ -17,7 +19,7 @@ fidx = num2str(index);
 fname = strcat(fidx,jp); 
 
 i = imread(fname);
-ic = imcrop(i, [1270 25 1775 1770]); 
+ic = imcrop(i, [1270 25 1775 1770]); % Image crop
 
 ig = rgb2gray(ic); 
 
