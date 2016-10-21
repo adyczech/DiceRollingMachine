@@ -4,38 +4,33 @@ clear all
 jp = '.jpg';
 suf = 'a';
 
-nof = 1544; %Pocet fotek
+nof = 1544; %Number of photos
 values = zeros(8,nof);
 invalid = zeros(0,1);
 
 fail = false;
 
-for index = 8:20
- 
-fidx = num2str(index); %Prevod indexu na sting
-fname = strcat(fidx,jp); %Spojeni indexu a pripony
+for index = 8:20 % Range of photos to analyze
 
-i = imread(fname); %Nacteni fotky
-ic = imcrop(i, [1270 25 1775 1770]); %Orez fotky
-%         figure(10);
-%         imshow(ic);title('orez');
-ig = rgb2gray(ic); %Stupne sedi
-%         figure(11);        
-%         imshow(ig); title('stupne sedi');
+% Constructeing file name 
+fidx = num2str(index);
+fname = strcat(fidx,jp); 
 
-%Kostky
+i = imread(fname);
+ic = imcrop(i, [1270 25 1775 1770]); 
+
+ig = rgb2gray(ic); 
+
+
+%Dice processing
 level1 = 0.70;
 dice1 = im2bw(ig, level1);
-%         figure(12);        
-%         imshow(dice1);
-%         title('Kbw');
+
 se1 = strel('disk', 9);
 dice2 = imopen(dice1, se1);
-%         figure(13);       
-%         imshow(dice2); title('Kcisteni');
+
 dice3 = imfill(dice2,'holes');
-%        figure(14);
-%         imshow(dice3); title('zalepeni der');
+
 
 bw1 = im2uint8(dice3);
 D = -bwdist(~bw1);
@@ -44,24 +39,20 @@ D2 = imimposemin(D,mask);
 Ld2 = watershed(D2);
 iDice = bw1;
 iDice(Ld2 == 0) = 0;
-%         figure(15);      
-%         imshow(iDice);  title('Kwatershed');
 
-%Tecky
+
+%Dots processing
 level2 = 0.75;
 dots1 = im2bw(ig, level2);
-%        figure(16);
-%         imshow(dots1); title('Tbw');
+
 se2 = strel('disk',8);
 dots2 = imopen(dots1, se2);
-%         figure(17);
-%         imshow(dots2);        title('Tcisteni');
+
 
 icomp = imcomplement(dots2);
 iopenned1 = bwselect(icomp,1,1,4);
 dots3 = imcomplement(dots2|iopenned1);
-%         figure(18);
-%         imshow(dots3);        title('Tinverze');
+
 
 bw2 = im2uint8(dots3);
 D = -bwdist(~bw2);
@@ -70,15 +61,8 @@ D2 = imimposemin(D,mask);
 Ld2 = watershed(D2);
 iDots = bw2;
 iDots(Ld2 == 0) = 0;
-%         figure(19);
-%         imshow(iDots);        title('Twatershed');
 
-% figure
-% subplot(1,2,1);
-% imshow(iDice);
-% subplot(1,2,2);
-% imshow(iDots);
-
+% Dots recognition
 iregionDots = regionprops(iDots, 'centroid');
 [labeledDots,numObjectsDots] = bwlabel(iDots, 4);
 statsDots = regionprops(labeledDots,'Eccentricity','Area','BoundingBox');
@@ -87,6 +71,7 @@ eccentricitiesDots = [statsDots.Eccentricity];
 idxOfDots = find(eccentricitiesDots);
 statsDefectsDots = statsDots(idxOfDots);
 
+%Dice recognition
 iregionDice = regionprops(iDice, 'centroid');
 [labeledDice,numObjectsDice] = bwlabel(iDice, 4);
 statsDice = regionprops(labeledDice,'Eccentricity','Area','BoundingBox');
@@ -100,6 +85,7 @@ imshow(ic);
 title(fname);
 hold on;
 
+% Postprocessing
 dots2remove = zeros(1,0);
 for idx = 1 : length(idxOfDots)
     if ((statsDefectsDots(idx).BoundingBox(3) > 17 && statsDefectsDots(idx).BoundingBox(3) < 46) && (statsDefectsDots(idx).BoundingBox(4) > 17 && statsDefectsDots(idx).BoundingBox(4) < 46))
@@ -125,8 +111,7 @@ end
 statsDefectsDice(dice2remove,:) = [];
 hold off;
 
-% figureName = strcat(fidx,suf);
-% saveas(h,figureName, 'jpg');
+
 pause(0.01);
 
 if (length(statsDefectsDice) == 6 && length(statsDefectsDots) <=36)
@@ -147,8 +132,7 @@ if (length(statsDefectsDice) == 6 && length(statsDefectsDots) <=36)
         end
 
     if fail ~= false
-        %values(7,index) = length(idxOfDice);
-        %values(8,index) = index; 
+       
     end
     end
 else
